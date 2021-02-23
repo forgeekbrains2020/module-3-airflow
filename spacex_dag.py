@@ -35,5 +35,5 @@ t2 = BashOperator(
     dag=dag
 )
 
-tfalcon1>>tfalcon9>>tfalconheavy>>t2
+falcon1>>falcon9>>falconheavy>>t2
 #t1 >> t2
