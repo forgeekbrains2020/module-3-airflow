@@ -19,9 +19,9 @@ rockets = ('falcon1','falcon9', 'falconheavy')
 for rocket in rockets:
     tname = 't' + rocket
     tname = BashOperator(
-    task_id="get_data", 
-    bash_command="python3 /root/airflow/dags/spacex/load_launches.py -y {{ execution_date.year }} -r rocket -o /var/data", 
-    dag=dag
+        task_id="get_data", 
+        bash_command="python3 /root/airflow/dags/spacex/load_launches.py -y {{ execution_date.year }} -r rocket -o /var/data", 
+        dag=dag
     )
 #t1 = BashOperator(
  #   task_id="get_data", 
