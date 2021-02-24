@@ -19,11 +19,16 @@ rockets = ('falcon1','falcon9', 'falconheavy','all')
 rockets_task = {}
 for rocket in rockets:
     #bash_command="python3 /root/airflow/dags/spacex/load_launches.py -y {{ execution_date.year }} -o /var/data -r " + rocket
+    if rocket == 'all':
+        bash_command = "python3 /root/airflow/dags/spacex/load_launches.py -y {{ execution_date.year }} -o /var/data"
+    elif:
+        bash_command = "python3 /root/airflow/dags/spacex/load_launches.py -y {{ execution_date.year }} -o /var/data -r " + rocket
     t1 = BashOperator(
         task_id="get_data" + rocket, 
-        bash_command = "python3 /root/airflow/dags/spacex/load_launches.py -y {{ execution_date.year }} -o /var/data -r " + rocket, 
+        bash_command = bash_command, 
         dag=dag
-    )
+     )
+        
     t2 = BashOperator(
         task_id="print_data" + rocket, 
         bash_command="cat /var/data/year={{ execution_date.year }}/rocket={{ params.rocket }}/data.csv", 
