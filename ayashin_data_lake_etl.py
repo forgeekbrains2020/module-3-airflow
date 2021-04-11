@@ -32,7 +32,7 @@ ods_billing = DataProcHiveOperator(
 )
 
 
-ods_billing = DataProcHiveOperator(
+ods_payment = DataProcHiveOperator(
     task_id='ods_payment',
     dag=dag,
     query="""
