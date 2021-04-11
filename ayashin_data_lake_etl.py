@@ -70,3 +70,17 @@ ods_traffic = DataProcHiveOperator(
     params={"job_suffix": randint(0, 100000)},
     region='europe-west3',
 )
+
+dm_traffic_by_user = DataProcHiveOperator(
+    task_id='dm_traffic_by_user',
+    dag=dag,
+    query="""
+        insert overwrite table dm_traffic_by_user partition (year='{{ execution_date.year }}') 
+        select user_id, max(bytes_received), min(bytes_received), avg(bytes_received) from ayashin.ods_traffic where year = 2020  = {{ execution_date.year }} GROUP BY user_id;
+    """,
+    cluster_name='cluster-dataproc',
+    job_name=USERNAME + '_ods_trafficby_user_{{ execution_date.year }}_{{ params.job_suffix }}',
+    params={"job_suffix": randint(0, 100000)},
+    region='europe-west3',
+)
+ods_traffic >> dm_traffic_by_user
