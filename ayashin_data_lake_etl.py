@@ -8,7 +8,7 @@ USERNAME = 'ayashin'
 
 default_args = {
     'owner': USERNAME,
-    'start_date': datetime(2012, 1, 1, 0, 0, 0)
+    'start_date': datetime(2013, 1, 1, 0, 0, 0)
 }
 
 dag = DAG(
@@ -22,8 +22,8 @@ ods_billing = DataProcHiveOperator(
     task_id='ods_billing',
     dag=dag,
     query="""
-        insert overwrite table emateshuk.ods_billing partition (year='{{ execution_date.year }}') 
-        select * from emateshuk.stg_billing where year(created_at) = {{ execution_date.year }};
+        insert overwrite table ayashin.ods_billing partition (year='{{ execution_date.year }}') 
+        select select user_id,from_unixtime(unix_timestamp(billing_period , 'yyyy-MM')),service, tariff, cast(sum as decimal(19,2)),timestamp(created_at, 'yyyy-MM-dd') from ayashin.stg_billing where year(created_at) = {{ execution_date.year }};
     """,
     cluster_name='cluster-dataproc',
     job_name=USERNAME + '_ods_billing_{{ execution_date.year }}_{{ params.job_suffix }}',
