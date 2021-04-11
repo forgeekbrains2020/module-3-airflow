@@ -57,3 +57,16 @@ ods_issue = DataProcHiveOperator(
     params={"job_suffix": randint(0, 100000)},
     region='europe-west3',
 )
+
+ods_traffic = DataProcHiveOperator(
+    task_id='ods_traffic',
+    dag=dag,
+    query="""
+        insert overwrite table ayashin.ods_traffic partition (year='{{ execution_date.year }}') 
+        select user_id,  from_unixtime(cast(`timestamp`/1000 as int)), device_id, device_ip_addr, bytes_sent, bytes_received from ayashin.stg_traffic where year(from_unixtime(cast(`timestamp`/1000 as int))) = {{ execution_date.year }};
+    """,
+    cluster_name='cluster-dataproc',
+    job_name=USERNAME + '_ods_traffic_{{ execution_date.year }}_{{ params.job_suffix }}',
+    params={"job_suffix": randint(0, 100000)},
+    region='europe-west3',
+)
