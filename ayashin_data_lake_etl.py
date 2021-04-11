@@ -30,3 +30,17 @@ ods_billing = DataProcHiveOperator(
     params={"job_suffix": randint(0, 100000)},
     region='europe-west3',
 )
+
+
+ods_billing = DataProcHiveOperator(
+    task_id='ods_payment',
+    dag=dag,
+    query="""
+        insert overwrite table ayashin.ods_payment partition (year='{{ execution_date.year }}') 
+        select user_id, pay_doc_type, pay_doc_num, account, phone, from_unixtime(unix_timestamp(billing_period , 'yyyy-MM')), timestamp(pay_date , 'yyyy-MM-dd'),    cast(sum as decimal(19,2)) from ayashin.stg_payment where year(pay_date) = {{ execution_date.year }};
+    """,
+    cluster_name='cluster-dataproc',
+    job_name=USERNAME + '_ods_payment_{{ execution_date.year }}_{{ params.job_suffix }}',
+    params={"job_suffix": randint(0, 100000)},
+    region='europe-west3',
+)
