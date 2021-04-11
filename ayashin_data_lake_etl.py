@@ -23,7 +23,7 @@ ods_billing = DataProcHiveOperator(
     dag=dag,
     query="""
         insert overwrite table ayashin.ods_billing partition (year='{{ execution_date.year }}') 
-        select select user_id,from_unixtime(unix_timestamp(billing_period , 'yyyy-MM')),service, tariff, cast(sum as decimal(19,2)),timestamp(created_at, 'yyyy-MM-dd') from ayashin.stg_billing where year(created_at) = {{ execution_date.year }};
+        select  user_id,from_unixtime(unix_timestamp(billing_period , 'yyyy-MM')),service, tariff, cast(sum as decimal(19,2)),timestamp(created_at, 'yyyy-MM-dd') from ayashin.stg_billing where year(created_at) = {{ execution_date.year }};
     """,
     cluster_name='cluster-dataproc',
     job_name=USERNAME + '_ods_billing_{{ execution_date.year }}_{{ params.job_suffix }}',
