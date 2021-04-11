@@ -49,7 +49,7 @@ ods_issue = DataProcHiveOperator(
     task_id='ods_issue',
     dag=dag,
     query="""
-        insert overwrite table ayashin.ods_ods_issue partition (year='{{ execution_date.year }}') 
+        insert overwrite table ayashin.ods_issue partition (year='{{ execution_date.year }}') 
         select * from ayashin.stg_issue where year(start_time) = {{ execution_date.year }};
     """,
     cluster_name='cluster-dataproc',
