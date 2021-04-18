@@ -19,61 +19,30 @@ dag = DAG(
     schedule_interval="0 0 1 1 *",
 )
 
-dds_payment_hub = PostgresOperator(
-    task_id="dds_payment_hub",
+dds_user_hub = PostgresOperator(
+    task_id="dds_user_hub",
     dag=dag,
     # postgres_conn_id="postgres_default",
     sql="""
-        insert into dds.hub_payment
-        select record_source,
-            pay_id,
-            load_date
-        from (
-            select record_source,
-                pay_id,
-                load_date,
-                row_number() over (partition by pay_id order by load_date desc) as row_num
-            from ods.hashed_payment
-        ) as h
-        where h.row_num = 1
+        INSERT into ayashin.hub_user(select * from ayashin.view_hub_user_etl);
     """
 )
 
 all_hubs_loaded = DummyOperator(task_id="all_hubs_loaded", dag=dag)
 
-dds_payment_hub >> all_hubs_loaded
+dds_user_hub >> all_hubs_loaded
 
-dds_link_user_payment = PostgresOperator(
+dds_link_user_accounts = PostgresOperator(
     task_id="dds_link_user_payment",
     dag=dag,
     # postgres_conn_id="postgres_default",
     sql="""
-        with row_rank as (
-            select * from (
-                select
-                    record_source,
-                    pay_id,
-                    user_id,
-                    link_paymnet_account,
-                    load_date,
-                    row_number() over (partition by link_paymnet_account order by load_date desc) as row_num
-                from ods.hashed_payment
-            ) as l
-            where row_num = 1
-        )
-        insert into dds.link_user_payment
-        select
-            record_source,
-            pay_id,
-            user_id,
-            link_paymnet_account,
-            load_date
-        from row_rank
+INSERT into ayashin.link_user_accounts(select * from ayashin.view_link_user_accounts_etl);
     """
 )
 
-all_hubs_loaded >> dds_link_user_payment
+all_hubs_loaded >> dds_link_user_accounts
 
 all_links_loaded = DummyOperator(task_id="all_links_loaded", dag=dag)
 
-dds_link_user_payment >> all_links_loaded
+dds_link_user_accounts >> all_links_loaded
