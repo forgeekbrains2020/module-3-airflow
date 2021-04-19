@@ -37,9 +37,17 @@ dds_account_hub = PostgresOperator(
     """
 )
 
+dds_payment_hub = PostgresOperator(
+    task_id="dds_payment_hub",
+    dag=dag,
+    # postgres_conn_id="postgres_default",
+    sql="""
+        INSERT into ayashin.hub_payment(select * from ayashin.view_hub_payment_etl);
+    """
+)
 all_hubs_loaded = DummyOperator(task_id="all_hubs_loaded", dag=dag)
 
-[dds_user_hub, dds_account_hub] >> all_hubs_loaded
+[dds_user_hub, dds_account_hub, dds_payment_hub] >> all_hubs_loaded
 
 dds_link_user_accounts = PostgresOperator(
     task_id="dds_link_user_payment",
