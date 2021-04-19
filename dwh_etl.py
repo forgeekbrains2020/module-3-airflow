@@ -122,9 +122,18 @@ INSERT into ayashin.sat_users_details (select * from ayashin.view_sat_user_detai
     """
 )
 
-all_links_loaded >> [dds_sat_user_details]
+dds_sat_payment = PostgresOperator(
+    task_id="dds_sat_payment",
+    dag=dag,
+    # postgres_conn_id="postgres_default",
+    sql="""
+INSERT into ayashin.sat_payment (select * from ayashin.view_sat_payment_etl);
+    """
+)
+
+all_links_loaded >> [dds_sat_user_details, dds_sat_payment]
 all_sats_loaded = DummyOperator(task_id="all_sats_loaded", dag=dag)
-[dds_sat_user_details] >> all_sats_loaded
+[dds_sat_user_details, dds_sat_payment] >> all_sats_loaded
 
 ods_clear = PostgresOperator(
     task_id="ods_clear",
