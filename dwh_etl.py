@@ -24,7 +24,7 @@ ods_payment = PostgresOperator(
     dag=dag,
     # postgres_conn_id="postgres_default",
     sql="""
-       select *  from stg_payment where extract (year from pay_date)= {{ execution_date.year }};
+       select *  from ayashin.stg_payment where extract (year from pay_date)= {{ execution_date.year }};
     """
 )
 
