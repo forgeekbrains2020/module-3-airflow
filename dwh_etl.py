@@ -27,7 +27,6 @@ ods_payment = PostgresOperator(
        select *  from stg_payment where extract (year from pay_date)= {{ execution_date.year }};
     """
 )
-ods_payment  >> [dds_user_hub, dds_account_hub, dds_payment_hub]
 
 dds_user_hub = PostgresOperator(
     task_id="dds_user_hub",
@@ -55,6 +54,8 @@ dds_payment_hub = PostgresOperator(
         INSERT into ayashin.hub_payment(select * from ayashin.view_hub_payment_etl);
     """
 )
+ods_payment  >> [dds_user_hub, dds_account_hub, dds_payment_hub]
+
 all_hubs_loaded = DummyOperator(task_id="all_hubs_loaded", dag=dag)
 
 [dds_user_hub, dds_account_hub, dds_payment_hub] >> all_hubs_loaded
