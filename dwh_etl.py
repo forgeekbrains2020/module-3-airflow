@@ -19,6 +19,16 @@ dag = DAG(
     schedule_interval="0 0 1 1 *",
 )
 
+ods_payment = PostgresOperator(
+    task_id="ods_payment",
+    dag=dag,
+    # postgres_conn_id="postgres_default",
+    sql="""
+       select *  from stg_payment where extract (year from pay_date)= {{ execution_date.year }};
+    """
+)
+ods_payment  >> [dds_user_hub, dds_account_hub, dds_payment_hub]
+
 dds_user_hub = PostgresOperator(
     task_id="dds_user_hub",
     dag=dag,
@@ -83,4 +93,12 @@ all_links_loaded >> [dds_sat_user_details]
 all_sats_loaded = DummyOperator(task_id="all_sats_loaded", dag=dag)
 [dds_sat_user_details] >> all_sats_loaded
 
-
+ods_clear = PostgresOperator(
+    task_id="ods_clear",
+    dag=dag,
+    # postgres_conn_id="postgres_default",
+    sql="""
+       delete  from ayashin.ods_payment where user_id>0;
+    """
+)
+all_sats_loaded  >> ods_clear
