@@ -49,8 +49,16 @@ all_hubs_loaded = DummyOperator(task_id="all_hubs_loaded", dag=dag)
 
 [dds_user_hub, dds_account_hub, dds_payment_hub] >> all_hubs_loaded
 
+dds_link_pay_doc_type_payment = PostgresOperator(
+    task_id="dds_link_pay_doc_type_payment",
+    dag=dag,
+    # postgres_conn_id="postgres_default",
+    sql="""
+INSERT into ayashin.link_pay_doc_type_payment(select * from ayashin.view_link_pay_doc_type_payment_etl);
+    """
+)
 dds_link_user_accounts = PostgresOperator(
-    task_id="dds_link_user_payment",
+    task_id="dds_link_user_accounts",
     dag=dag,
     # postgres_conn_id="postgres_default",
     sql="""
@@ -58,8 +66,8 @@ INSERT into ayashin.link_user_accounts(select * from ayashin.view_link_user_acco
     """
 )
 
-all_hubs_loaded >> dds_link_user_accounts
+all_hubs_loaded >> [dds_link_user_accounts, dds_link_pay_doc_type_payment]
 
 all_links_loaded = DummyOperator(task_id="all_links_loaded", dag=dag)
 
-dds_link_user_accounts >> all_links_loaded
+ [dds_link_user_accounts, dds_link_pay_doc_type_payment] >> all_links_loaded
