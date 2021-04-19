@@ -23,7 +23,9 @@ fill_ods_payment = PostgresOperator(
     task_id="fill_ods_payment",
     dag=dag,
     # postgres_conn_id="postgres_default",
-    sql="""insert into ayashin.ods_payment
+    sql="""
+    delete  from ayashin.ods_payment where extract (year from pay_date)={{ execution_date.year }};
+    insert into ayashin.ods_payment
     select *  from ayashin.stg_payment where extract (year from pay_date)={{ execution_date.year }};
     """
 )
@@ -135,7 +137,7 @@ all_links_loaded >> [dds_sat_user_details, dds_sat_payment]
 all_sats_loaded = DummyOperator(task_id="all_sats_loaded", dag=dag)
 [dds_sat_user_details, dds_sat_payment] >> all_sats_loaded
 
-ods_clear = PostgresOperator(
+'''ods_clear = PostgresOperator(
     task_id="ods_clear",
     dag=dag,
     # postgres_conn_id="postgres_default",
@@ -144,3 +146,4 @@ ods_clear = PostgresOperator(
     """
 )
 all_sats_loaded  >> ods_clear
+'''
