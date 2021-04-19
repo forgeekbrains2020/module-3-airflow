@@ -83,13 +83,35 @@ dds_link_user_accounts = PostgresOperator(
     dag=dag,
     # postgres_conn_id="postgres_default",
     sql="""
+INSERT into ayashin.link_payments_accounts_users(select * from ayashin.view_link_payments_accounts_users_etl);
+    """
+)
+
+
+dds_link_payments_accounts_users = PostgresOperator(
+    task_id="dds_link_payments_accounts_users",
+    dag=dag,
+    # postgres_conn_id="postgres_default",
+    sql="""
 INSERT into ayashin.link_user_accounts(select * from ayashin.view_link_user_accounts_etl);
     """
 )
 
-all_hubs_loaded >> [dds_link_user_accounts, dds_link_pay_doc_type_payment]
+)
+dds_link_payment_billing_period = PostgresOperator(
+    task_id="dds_link_payment_billing_period",
+    dag=dag,
+    # postgres_conn_id="postgres_default",
+    sql="""
+INSERT into ayashin.link_payment_billing_period(select * from ayashin.view_link_payment_billing_period_etl);
+    """
+)
+
+
+
+all_hubs_loaded >> [dds_link_user_accounts, dds_link_pay_doc_type_payment, dds_link_payments_accounts_users, dds_link_payment_billing_period]
 all_links_loaded = DummyOperator(task_id="all_links_loaded", dag=dag)
-[dds_link_user_accounts, dds_link_pay_doc_type_payment] >> all_links_loaded
+[dds_link_user_accounts, dds_link_pay_doc_type_payment, dds_link_payments_accounts_users, dds_link_payment_billing_period] >> all_links_loaded
 
 dds_sat_user_details = PostgresOperator(
     task_id="dds_sat_user_details",
