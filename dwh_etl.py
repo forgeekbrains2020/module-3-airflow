@@ -97,7 +97,7 @@ INSERT into ayashin.link_user_accounts(select * from ayashin.view_link_user_acco
     """
 )
 
-)
+
 dds_link_payment_billing_period = PostgresOperator(
     task_id="dds_link_payment_billing_period",
     dag=dag,
