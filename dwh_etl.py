@@ -79,4 +79,8 @@ INSERT into ayashin.sat_users_details (select * from ayashin.view_sat_user_detai
     """
 )
 
+all_links_loaded >> [dds_sat_user_details]
+all_sats_loaded = DummyOperator(task_id="all_sats_loaded", dag=dag)
+[dds_sat_user_details] >> all_sats_loaded
+
 
