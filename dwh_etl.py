@@ -70,16 +70,4 @@ all_hubs_loaded >> [dds_link_user_accounts, dds_link_pay_doc_type_payment]
 all_links_loaded = DummyOperator(task_id="all_links_loaded", dag=dag)
 [dds_link_user_accounts, dds_link_pay_doc_type_payment] >> all_links_loaded
 
-dds_user_details_sat = PostgresOperator(
-    task_id="dds_user_details_sat",
-    dag=dag,
-    # postgres_conn_id="postgres_default",
-    sql="""
-        INSERT into ayashin.sat_users_details (select * from ayashin.view_sat_user_details_etl);
-    """
-)
 
-all_links_loaded >> [dds_user_details_sat]
-all_sats_loaded = DummyOperator(task_id="all_sats_loaded", dag=dag)
-[dds_user_details_sat] >> all_sats_loaded
- 
