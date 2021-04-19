@@ -23,8 +23,8 @@ fill_ods_payment = PostgresOperator(
     task_id="fill_ods_payment",
     dag=dag,
     # postgres_conn_id="postgres_default",
-    sql="""insert into ods_payment
-    select *  from stg_payment where extract (year from pay_date)={{ execution_date.year }};
+    sql="""insert into ayashin.ods_payment
+    select *  from ayashin.stg_payment where extract (year from pay_date)={{ execution_date.year }};
     """
 )
 
