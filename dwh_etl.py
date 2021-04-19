@@ -19,12 +19,12 @@ dag = DAG(
     schedule_interval="0 0 1 1 *",
 )
 
-ods_payment = PostgresOperator(
-    task_id="ods_payment",
+fill_ods_payment = PostgresOperator(
+    task_id="fill_ods_payment",
     dag=dag,
     # postgres_conn_id="postgres_default",
-    sql="""
-       select *  from ayashin.stg_payment where extract (year from pay_date)= {{ execution_date.year }};
+    sql="""insert into ods_payment
+    select *  from stg_payment where extract (year from pay_date)={{ execution_date.year }};
     """
 )
 
@@ -54,7 +54,7 @@ dds_payment_hub = PostgresOperator(
         INSERT into ayashin.hub_payment(select * from ayashin.view_hub_payment_etl);
     """
 )
-ods_payment  >> [dds_user_hub, dds_account_hub, dds_payment_hub]
+fill_ods_payment  >> [dds_user_hub, dds_account_hub, dds_payment_hub]
 
 all_hubs_loaded = DummyOperator(task_id="all_hubs_loaded", dag=dag)
 
