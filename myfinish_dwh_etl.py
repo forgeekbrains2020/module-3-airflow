@@ -63,7 +63,7 @@ dds_billing_period_hub = PostgresOperator(
     dag=dag,
     # postgres_conn_id="postgres_default",
     sql="""
-        INSERT into ayashin.billing_period(select * from ayashin.view_hub_billing_period_etl);
+        INSERT into ayashin.hub_billing_period(select * from ayashin.view_hub_billing_period_etl);
     """
 )
 
