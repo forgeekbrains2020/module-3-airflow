@@ -15,9 +15,9 @@ default_args = {
 dag = DAG(
     USERNAME + 'test_my_dwh_etl',
     default_args=default_args,
-    max_active_runs=1,
     description='DWH ETL test tasks',
     schedule_interval="@yearly",
+    max_active_runs=1,
 )
 
 fill_ods_payment = PostgresOperator(
