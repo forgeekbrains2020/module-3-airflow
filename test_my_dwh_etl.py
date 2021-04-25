@@ -17,7 +17,7 @@ dag = DAG(
     default_args=default_args,
     max_active_runs=1,
     description='DWH ETL test tasks',
-    schedule_interval="0 0 1 1 *",
+    schedule_interval="@yearly",
 )
 
 fill_ods_payment = PostgresOperator(
