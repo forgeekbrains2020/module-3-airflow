@@ -15,6 +15,7 @@ default_args = {
 dag = DAG(
     USERNAME + 'test_my_dwh_etl',
     default_args=default_args,
+    max_active_runs=1,
     description='DWH ETL test tasks',
     schedule_interval="0 0 1 1 *",
 )
@@ -38,7 +39,7 @@ dds_user_hub = PostgresOperator(
         INSERT into ayashin.test_hub_user(select * from ayashin.test_view_hub_user_etl);
     """
 )
-'''
+
 dds_account_hub = PostgresOperator(
     task_id="dds_account_hub",
     dag=dag,
@@ -47,6 +48,6 @@ dds_account_hub = PostgresOperator(
         INSERT into ayashin.test_hub_account(select * from ayashin.test_view_hub_account_etl);
     """
 )
-'''
-fill_ods_payment>>[dds_user_hub]
-#fill_ods_payment>>[dds_user_hub,dds_account_hub]
+
+#fill_ods_payment>>[dds_user_hub]
+fill_ods_payment>>[dds_user_hub,dds_account_hub]
