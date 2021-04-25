@@ -38,3 +38,5 @@ dds_user_hub = PostgresOperator(
         INSERT into ayashin.test_hub_user(select * from ayashin.test_view_hub_user_etl);
     """
 )
+
+fill_ods_payment>>[dds_user_hub]
