@@ -15,7 +15,7 @@ default_args = {
 dag = DAG(
     USERNAME + 'test_my_dwh_etl',
     default_args=default_args,
-    description='DWH ETL tasks',
+    description='DWH ETL test tasks',
     schedule_interval="0 0 1 1 *",
 )
 
