@@ -35,6 +35,6 @@ dds_user_hub = PostgresOperator(
     dag=dag,
     # postgres_conn_id="postgres_default",
     sql="""
-        INSERT into ayashin.hub_user(select * from ayashin.view_hub_user_etl);
+        INSERT into ayashin.test_hub_user(select * from ayashin.test_view_hub_user_etl);
     """
 )
