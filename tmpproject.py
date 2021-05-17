@@ -31,6 +31,28 @@ fill_ods_payment = PostgresOperator(
     """
 )
 
+fill_ods_traffic = PostgresOperator(
+    task_id="fill_ods_traffic",
+    dag=dag,
+    # postgres_conn_id="postgres_default",
+    sql="""
+    delete  from ayashin.pj_ods_traffic where extract (year from timestamp)={{ execution_date.year }};
+    insert into ayashin.pj_ods_traffic
+    select *, '{{ execution_date}}'::TIMESTAMP as load_date from ayashin.pj_stg_traffic where extract (year from (to_timestamp(cast(timestamp/1000 as int))::timestamp))={{ execution_date.year }};
+    """
+)
+
+fill_ods_mdm = PostgresOperator(
+    task_id="fill_ods_mdm",
+    dag=dag,
+    # postgres_conn_id="postgres_default",
+    sql="""
+    delete  from ayashin.pj_ods_mdm where extract (year from registered_at)={{ execution_date.year }};
+    insert into ayashin.pj_ods_mdm
+    select *, '{{ execution_date}}'::TIMESTAMP as load_date from mdm.user where extract (year from registered_at)={{ execution_date.year }};
+    """
+)
+
 dds_user_hub = PostgresOperator(
     task_id="dds_user_hub",
     dag=dag,
@@ -76,13 +98,51 @@ dds_pay_doc_type_hub = PostgresOperator(
     """
 )
 
-#fill_ods_payment  >> [dds_user_hub, dds_account_hub, dds_payment_hub,dds_billing_period_hub, dds_pay_doc_type_hub]
-fill_ods_payment  >> [dds_user_hub, dds_account_hub]
+dds_hub_billing_mode = PostgresOperator(
+    task_id="dds_hub_billing_mode",
+    dag=dag,
+    # postgres_conn_id="postgres_default",
+    sql="""
+        INSERT into ayashin.pj_dds_hub_billing_mode(select * from ayashin.pj_view_hub_billing_mode_etl);
+    """
+)
+
+dds_hub_district = PostgresOperator(
+    task_id="dds_hub_district",
+    dag=dag,
+    # postgres_conn_id="postgres_default",
+    sql="""
+        INSERT into ayashin.pj_dds_hub_district(select * from ayashin.pj_view_hub_district_etl);
+    """
+)
+
+dds_hub_legal_type = PostgresOperator(
+    task_id="dds_hub_legal_type",
+    dag=dag,
+    # postgres_conn_id="postgres_default",
+    sql="""
+        INSERT into ayashin.pj_dds_hub_legal_type(select * from ayashin.pj_view_hub_legal_type_etl);
+    """
+)
+
+dds_hub_user_status = PostgresOperator(
+    task_id="dds_hub_user_status",
+    dag=dag,
+    # postgres_conn_id="postgres_default",
+    sql="""
+        INSERT into ayashin.pj_dds_hub_user_status(select * from ayashin.pj_view_hub_user_status_etl);
+    """
+)
+
+
+
+[fill_ods_payment, fill_ods_traffic, fill_ods_mdm]   >> [dds_user_hub, dds_account_hub, dds_payment_hub,dds_billing_period_hub, dds_pay_doc_type_hub, dds_hub_billing_mode, dds_hub_district, dds_hub_legal_type, dds_hub_user_status, dds_hub_ip, dds_hub_device ]
+#fill_ods_payment  >> [dds_user_hub, dds_account_hub]
 
 all_hubs_loaded = DummyOperator(task_id="all_hubs_loaded", dag=dag)
 
-[dds_user_hub, dds_account_hub] >> all_hubs_loaded
-# [dds_user_hub, dds_account_hub, dds_payment_hub, dds_billing_period_hub, dds_pay_doc_type_hub] >> all_hubs_loaded
+#[dds_user_hub, dds_account_hub] >> all_hubs_loaded
+[dds_user_hub, dds_account_hub, dds_payment_hub, dds_billing_period_hub, dds_pay_doc_type_hub, dds_hub_billing_mode, dds_hub_district, dds_hub_legal_type, dds_hub_user_status, dds_hub_ip, dds_hub_device] >> all_hubs_loaded
 
 dds_link_pay_doc_type_payment = PostgresOperator(
     task_id="dds_link_pay_doc_type_payment",
