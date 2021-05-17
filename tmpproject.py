@@ -179,6 +179,7 @@ WITH source_data AS (
          WHERE latest_records.user_hashdiff IS NULL
      )
 SELECT * FROM records_to_insert
+"""
 '''    sql="""
 INSERT into ayashin.pj_dds_sat_users_details (select * from ayashin.pj_view_sat_user_details_etl);
     """
