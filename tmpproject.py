@@ -180,10 +180,6 @@ WITH source_data AS (
      )
 SELECT * FROM records_to_insert
 """
-'''    sql="""
-INSERT into ayashin.pj_dds_sat_users_details (select * from ayashin.pj_view_sat_user_details_etl);
-    """
-   '''
 )
 
 dds_sat_payment = PostgresOperator(
