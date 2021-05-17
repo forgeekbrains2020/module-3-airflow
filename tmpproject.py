@@ -134,6 +134,25 @@ dds_hub_user_status = PostgresOperator(
     """
 )
 
+dds_hub_ip = PostgresOperator(
+    task_id="dds_hub_ip",
+    dag=dag,
+    # postgres_conn_id="postgres_default",
+    sql="""
+        INSERT into ayashin.pj_dds_hub_ip(select * from ayashin.pj_view_hub_ip_etl);
+    """
+)
+
+
+dds_hub_device = PostgresOperator(
+    task_id="dds_hub_device",
+    dag=dag,
+    # postgres_conn_id="postgres_default",
+    sql="""
+        INSERT into ayashin.pj_dds_hub_device(select * from ayashin.pj_view_hub_device_etl);
+    """
+)
+
 
 
 [fill_ods_payment, fill_ods_traffic, fill_ods_mdm]   >> [dds_user_hub, dds_account_hub, dds_payment_hub,dds_billing_period_hub, dds_pay_doc_type_hub, dds_hub_billing_mode, dds_hub_district, dds_hub_legal_type, dds_hub_user_status, dds_hub_ip, dds_hub_device ]
