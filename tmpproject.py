@@ -187,7 +187,59 @@ dds_sat_payment = PostgresOperator(
     dag=dag,
     # postgres_conn_id="postgres_default",
     sql="""
-INSERT into ayashin.pj_dds_sat_payment (select * from ayashin.pj_view_sat_payment_etl);
+INSERT into ayashin.pj_dds_sat_payment (payments_pk, payment_hashdif, pay_date, sum, effective_from, load_date, record_source)
+WITH source_data AS (
+    SELECT a.payments_pk,
+           a.payment_hashdif,
+           a.pay_date,
+           a.sum,
+           a.effective_from,
+           a.load_date,
+           a.record_source
+    --FROM ayashin.pj_ods_v_payment a where a.load_date =  '2014-01-01 00:00:00.000000 +00:00'
+    FROM ayashin.pj_ods_v_payment a where extract (year from a.pay_date) =  '{{ execution_date }}::TIMESTAMP
+),
+update_records AS (
+         SELECT a.payments_pk,
+                a.payment_hashdif,
+                a.pay_date,
+                a.sum,
+                a.effective_from,
+                a.load_date,
+                a.record_source
+         FROM ayashin.pj_dds_sat_payment a
+                  JOIN source_data as b
+                      ON a.payments_pk = b.payments_pk
+    where a.load_date <= (select max(load_date) from source_data)
+     ),
+     latest_records AS (
+         SELECT *
+         FROM (SELECT c.payments_pk,
+                      c.payment_hashdif,
+                      c.pay_date,
+                      c.effective_from,
+                      c.load_date,
+                      c.record_source,
+                      CASE
+                          WHEN (rank() OVER (PARTITION BY c.payments_pk ORDER BY c.load_date DESC)) = 1 THEN 'Y'::text
+                          ELSE 'N'::text
+                          END AS latest
+               FROM update_records c) s
+         WHERE s.latest = 'Y'::text
+     ),
+     records_to_insert AS (
+         SELECT e.payments_pk,
+                e.payment_hashdif,
+                e.pay_date,
+                e.sum,
+                e.effective_from,
+                e.load_date,
+                e.record_source
+         FROM source_data e
+                  LEFT JOIN latest_records ON latest_records.payment_hashdif = e.payment_hashdif and latest_records.payments_pk = e.payments_pk
+         WHERE latest_records.payment_hashdif IS NULL
+     )
+SELECT * FROM records_to_insert
     """
 )
 
