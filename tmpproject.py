@@ -25,9 +25,7 @@ fill_ods_payment = PostgresOperator(
     dag=dag,
     # postgres_conn_id="postgres_default",
     sql="""
-    delete  from ayashin.pj_ods_payment where extract (year from pay_date)={{ execution_date.year }};
-    insert into ayashin.pj_ods_payment
-    select *, '{{ execution_date}}'::TIMESTAMP as load_date from ayashin.pj_stg_payment where extract (year from pay_date)='{{ execution_date.year }}';
+        select *, '{{ execution_date}}'::TIMESTAMP as load_date from ayashin.pj_stg_payment where extract (year from pay_date)='{{ execution_date.year }}';
     """
 )
 
