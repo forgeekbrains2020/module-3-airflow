@@ -91,7 +91,7 @@ WITH source_data AS (
            a.load_date,
            a.record_source
     
-    FROM ayashin.pj_ods_v_payment a where where a.load_date =  '{{ execution_date }}'::TIMESTAMP
+    FROM ayashin.pj_ods_v_payment a where  a.load_date =  '{{ execution_date }}'::TIMESTAMP
 ),
 update_records AS (
          SELECT a.payments_pk,
