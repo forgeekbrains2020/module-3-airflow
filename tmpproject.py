@@ -36,7 +36,7 @@ fill_ods_traffic = PostgresOperator(
     sql="""
     delete  from ayashin.pj_ods_traffic where extract (year from timestamp)={{ execution_date.year }};
     insert into ayashin.pj_ods_traffic
-    select *, '{{ execution_date}}'::TIMESTAMP as load_date from ayashin.pj_stg_traffic where extract (year from (to_timestamp(cast(timestamp/1000 as int))::timestamp at time zone 'UTC'))='{{ execution_date.year }}';
+    select *, '{{ execution_date}}'::TIMESTAMP as load_date from ayashin.pj_stg_traffic where extract (year from (to_timestamp(cast("timestamp"/1000 as int))::timestamp at time zone 'UTC'))='{{ execution_date.year }}';
     """
 )
 
