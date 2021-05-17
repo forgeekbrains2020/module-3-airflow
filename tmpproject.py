@@ -130,8 +130,57 @@ dds_sat_user_details = PostgresOperator(
     dag=dag,
     # postgres_conn_id="postgres_default",
     sql="""
+INSERT into ayashin.pj_dds_sat_users_details (user_pk, user_hashdiff, phone, effective_from, load_date, record_source)
+WITH source_data AS (
+    SELECT a.user_pk,
+           a.user_hashdiff,
+           a.phone,
+           a.effective_from,
+           a.load_date,
+           a.record_source
+    FROM ayashin.pj_ods_v_payment a where extract (year from a.pay_date) =  '2014'
+),
+     update_records AS (
+         SELECT a.user_pk,
+                a.user_hashdiff,
+                a.phone,
+                a.effective_from,
+                a.load_date,
+                a.record_source
+         FROM ayashin.pj_dds_sat_users_details a
+                  JOIN source_data as b
+                      ON a.user_pk = b.user_pk
+         where a.load_date <= (select max(load_date) from source_data)
+     ),
+     latest_records AS (
+         SELECT *
+         FROM (SELECT c.user_pk,
+                      c.user_hashdiff,
+                      c.load_date,
+                      CASE
+                          WHEN (rank() OVER (PARTITION BY c.user_pk ORDER BY c.load_date DESC)) = 1 THEN 'Y'::text
+                          ELSE 'N'::text
+                          END AS latest
+               FROM update_records c) s
+         WHERE s.latest = 'Y'::text
+     ),
+     records_to_insert AS (
+         SELECT distinct
+                e.user_pk,
+                e.user_hashdiff,
+                e.phone,
+                e.effective_from,
+                e.load_date,
+                e.record_source
+         FROM source_data e
+                  LEFT JOIN latest_records ON latest_records.user_hashdiff = e.user_hashdiff and latest_records.user_pk =e.user_pk
+         WHERE latest_records.user_hashdiff IS NULL
+     )
+SELECT * FROM records_to_insert
+'''    sql="""
 INSERT into ayashin.pj_dds_sat_users_details (select * from ayashin.pj_view_sat_user_details_etl);
     """
+   '''
 )
 
 dds_sat_payment = PostgresOperator(
