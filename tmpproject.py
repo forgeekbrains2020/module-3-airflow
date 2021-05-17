@@ -35,7 +35,7 @@ fill_ods_traffic = PostgresOperator(
     # postgres_conn_id="postgres_default",
     sql="""
     insert into ayashin.pj_ods_traffic
-    select user_id, to_timestamp(cast(timestamp/1000 as int))::timestamp at time zone 'UTC' as timestamp,device_id, device_ip_addr, bytes_sent, bytes_received, '{{ execution_date}}'::TIMESTAMP as load_date from ayashin.pj_stg_traffic;
+    select user_id, to_timestamp(cast(timestamp/1000 as int))::timestamp at time zone 'UTC' as timestamp,device_id, device_ip_addr, bytes_sent, bytes_received, '{{ execution_date}}'::TIMESTAMP as load_date from ayashin.pj_stg_traffic where extract (year from timestamp)={{ execution_date.year }};
     """
 )
 
