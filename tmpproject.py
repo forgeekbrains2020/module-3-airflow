@@ -25,6 +25,8 @@ fill_ods_payment = PostgresOperator(
     dag=dag,
     # postgres_conn_id="postgres_default",
     sql="""
+        delete  from ayashin.pj_ods_payment where extract (year from pay_date)={{ execution_date.year }};
+        insert into ayashin.pj_ods_payment
         select *, '{{ execution_date}}'::TIMESTAMP as load_date from ayashin.pj_stg_payment where extract (year from pay_date)='{{ execution_date.year }}';
     """
 )
@@ -34,11 +36,22 @@ fill_ods_traffic = PostgresOperator(
     dag=dag,
     # postgres_conn_id="postgres_default",
     sql="""
+    delete  from ayashin.pj_ods_traffic where extract (year from timestamp)={{ execution_date.year }};
     insert into ayashin.pj_ods_traffic
     select user_id, to_timestamp(cast(timestamp/1000 as int))::timestamp at time zone 'UTC' as timestamp,device_id, device_ip_addr, bytes_sent, bytes_received, '{{ execution_date}}'::TIMESTAMP as load_date from ayashin.pj_stg_traffic where extract (year from (to_timestamp(cast("timestamp"/1000 as int))::timestamp at time zone 'UTC'))='{{ execution_date.year }}';
     """
 )
 
+fill_ods_mdm = PostgresOperator(
+    task_id="fill_ods_mdm",
+    dag=dag,
+    # postgres_conn_id="postgres_default",
+    sql="""
+    delete  from ayashin.pj_ods_mdm where extract (year from registered_at)={{ execution_date.year }};
+    insert into ayashin.pj_ods_mdm
+    select *, '{{ execution_date}}'::TIMESTAMP as load_date from mdm.user where extract (year from registered_at)={{ execution_date.year }};
+    """
+)
 
 dds_user_hub = PostgresOperator(
     task_id="dds_user_hub",
@@ -142,7 +155,7 @@ dds_hub_device = PostgresOperator(
 
 
 
-fill_ods_traffic >> fill_ods_payment  >> [dds_user_hub, dds_account_hub, dds_payment_hub,dds_billing_period_hub, dds_pay_doc_type_hub, dds_hub_billing_mode, dds_hub_district, dds_hub_legal_type, dds_hub_user_status, dds_hub_ip, dds_hub_device ]
+fill_ods_traffic >> fill_ods_mdm >> fill_ods_payment  >> [dds_user_hub, dds_account_hub, dds_payment_hub,dds_billing_period_hub, dds_pay_doc_type_hub, dds_hub_billing_mode, dds_hub_district, dds_hub_legal_type, dds_hub_user_status, dds_hub_ip, dds_hub_device ]
 #fill_ods_payment  >> [dds_user_hub, dds_account_hub]
 
 all_hubs_loaded = DummyOperator(task_id="all_hubs_loaded", dag=dag)
