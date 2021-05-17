@@ -140,7 +140,7 @@ WITH source_data AS (
            a.effective_from,
            a.load_date,
            a.record_source
-    FROM ayashin.pj_ods_v_payment a where extract (year from a.pay_date) =  '{{ execution_date }}::TIMESTAMP
+    FROM ayashin.pj_ods_v_payment a where extract (year from a.pay_date) =  '{{ execution_date }}'::TIMESTAMP
 ),
      update_records AS (
          SELECT a.user_pk,
@@ -196,8 +196,8 @@ WITH source_data AS (
            a.effective_from,
            a.load_date,
            a.record_source
-    --FROM ayashin.pj_ods_v_payment a where a.load_date =  '2014-01-01 00:00:00.000000 +00:00'
-    FROM ayashin.pj_ods_v_payment a where extract (year from a.pay_date) =  '{{ execution_date }}::TIMESTAMP
+    
+    FROM ayashin.pj_ods_v_payment a where extract (year from a.pay_date) =  '{{ execution_date }}'::TIMESTAMP
 ),
 update_records AS (
          SELECT a.payments_pk,
