@@ -203,9 +203,29 @@ INSERT into ayashin.pj_dds_link_payment_billing_period(select * from ayashin.pj_
 
 
 
-all_hubs_loaded >> [dds_link_user_accounts, dds_link_pay_doc_type_payment, dds_link_payments_accounts_users, dds_link_payment_billing_period]
+dds_link_user_registration = PostgresOperator(
+    task_id="dds_link_user_registration",
+    dag=dag,
+    # postgres_conn_id="postgres_default",
+    sql="""
+INSERT into ayashin.pj_dds_link_user_registration(select * from ayashin.pj_view_link_user_registration_etl);
+    """
+)
+
+dds_link_traffic_user_device = PostgresOperator(
+    task_id="dds_link_traffic_user_device",
+    dag=dag,
+    # postgres_conn_id="postgres_default",
+    sql="""
+INSERT into ayashin.pj_dds_link_traffic_user_device(select * from ayashin.pj_view_link_traffic_user_device_etl);
+    """
+)
+
+
+
+all_hubs_loaded >> [dds_link_user_accounts, dds_link_pay_doc_type_payment, dds_link_payments_accounts_users, dds_link_payment_billing_period, dds_link_user_registration, dds_link_traffic_user_device]
 all_links_loaded = DummyOperator(task_id="all_links_loaded", dag=dag)
-[dds_link_user_accounts, dds_link_pay_doc_type_payment, dds_link_payments_accounts_users, dds_link_payment_billing_period] >> all_links_loaded
+[dds_link_user_accounts, dds_link_pay_doc_type_payment, dds_link_payments_accounts_users, dds_link_payment_billing_period, dds_link_user_registration, dds_link_traffic_user_device] >> all_links_loaded
 
 dds_sat_user_details = PostgresOperator(
     task_id="dds_sat_user_details",
