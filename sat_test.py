@@ -40,7 +40,7 @@ WITH source_data AS (
            a.record_source,
            row_number()
            OVER (PARTITION BY a.user_hashdiff ORDER BY a.effective_from) AS row_number
-    FROM ayashin.pj_ods_v_payment a where  a.load_date =  '{{ execution_date }}'::TIMESTAMP h
+    FROM ayashin.pj_ods_v_payment a where  a.load_date =  '{{ execution_date }}'::TIMESTAMP) h
     --'2013-01-01 00:00:00.000000 +00:00'::TIMESTAMP) h-- and user_pk = 'bf0377d5a3968bac5aac7a10dfff1b86')
     where h.row_number = 1
 
