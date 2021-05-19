@@ -219,4 +219,4 @@ SELECT * FROM records_to_insert
     """
 )
 
-[dds_sat_user_details, dds_sat_payment, dds_sat_traffic_user_device] >> all_sats_loaded
+dds_sat_user_details >> dds_sat_payment >> dds_sat_traffic_user_device
