@@ -22,79 +22,8 @@ dag = DAG(
 
 
 
-all_source_ods_loaded = DummyOperator(task_id="all_source_ods_loaded", dag=dag)
-
-[fill_ods_traffic , fill_ods_mdm , fill_ods_payment]  >> all_source_ods_loaded
-all_source_ods_loaded >> [dds_user_hub, dds_account_hub, dds_payment_hub,dds_billing_period_hub, dds_pay_doc_type_hub, dds_hub_billing_mode, dds_hub_district, dds_hub_legal_type, dds_hub_user_status, dds_hub_ip, dds_hub_device ]
-#fill_ods_payment  >> [dds_user_hub, dds_account_hub]
-
-all_hubs_loaded = DummyOperator(task_id="all_hubs_loaded", dag=dag)
-
-#[dds_user_hub, dds_account_hub] >> all_hubs_loaded
-[dds_user_hub, dds_account_hub, dds_payment_hub, dds_billing_period_hub, dds_pay_doc_type_hub, dds_hub_billing_mode, dds_hub_district, dds_hub_legal_type, dds_hub_user_status, dds_hub_ip, dds_hub_device] >> all_hubs_loaded
-
-dds_link_pay_doc_type_payment = PostgresOperator(
-    task_id="dds_link_pay_doc_type_payment",
-    dag=dag,
-    # postgres_conn_id="postgres_default",
-    sql="""
-INSERT into ayashin.pj_dds_link_pay_doc_type_payment(select * from ayashin.pj_view_link_pay_doc_type_payment_etl);
-    """
-)
-dds_link_user_accounts = PostgresOperator(
-    task_id="dds_link_user_accounts",
-    dag=dag,
-    # postgres_conn_id="postgres_default",
-    sql="""
-INSERT into ayashin.pj_dds_link_payments_accounts_users(select * from ayashin.pj_view_link_payments_accounts_users_etl);
-    """
-)
 
 
-dds_link_payments_accounts_users = PostgresOperator(
-    task_id="dds_link_payments_accounts_users",
-    dag=dag,
-    # postgres_conn_id="postgres_default",
-    sql="""
-INSERT into ayashin.pj_dds_link_user_accounts(select * from ayashin.pj_view_link_user_accounts_etl);
-    """
-)
-
-
-dds_link_payment_billing_period = PostgresOperator(
-    task_id="dds_link_payment_billing_period",
-    dag=dag,
-    # postgres_conn_id="postgres_default",
-    sql="""
-INSERT into ayashin.pj_dds_link_payment_billing_period(select * from ayashin.pj_view_link_payment_billing_period_etl);
-    """
-)
-
-
-
-dds_link_user_registration = PostgresOperator(
-    task_id="dds_link_user_registration",
-    dag=dag,
-    # postgres_conn_id="postgres_default",
-    sql="""
-INSERT into ayashin.pj_dds_link_user_registration(select * from ayashin.pj_view_link_user_registration_etl);
-    """
-)
-
-dds_link_traffic_user_device = PostgresOperator(
-    task_id="dds_link_traffic_user_device",
-    dag=dag,
-    # postgres_conn_id="postgres_default",
-    sql="""
-INSERT into ayashin.pj_dds_link_traffic_user_device(select * from ayashin.pj_view_link_traffic_user_device_etl);
-    """
-)
-
-
-
-all_hubs_loaded >> [dds_link_user_accounts, dds_link_pay_doc_type_payment, dds_link_payments_accounts_users, dds_link_payment_billing_period, dds_link_user_registration, dds_link_traffic_user_device]
-all_links_loaded = DummyOperator(task_id="all_links_loaded", dag=dag)
-[dds_link_user_accounts, dds_link_pay_doc_type_payment, dds_link_payments_accounts_users, dds_link_payment_billing_period, dds_link_user_registration, dds_link_traffic_user_device] >> all_links_loaded
 
 dds_sat_user_details = PostgresOperator(
     task_id="dds_sat_user_details",
@@ -103,14 +32,21 @@ dds_sat_user_details = PostgresOperator(
     sql="""
 INSERT into ayashin.pj_dds_sat_users_details (user_pk, user_hashdiff, phone, effective_from, load_date, record_source)
 WITH source_data AS (
-    SELECT a.user_pk,
+    select * from( SELECT a.user_pk,
            a.user_hashdiff,
            a.phone,
            a.effective_from,
            a.load_date,
-           a.record_source
+           a.record_source,
+           row_number()
+           OVER (PARTITION BY a.user_hashdiff ORDER BY a.effective_from) AS row_number
     FROM ayashin.pj_ods_v_payment a where  a.load_date =  '{{ execution_date }}'::TIMESTAMP
+    --'2013-01-01 00:00:00.000000 +00:00'::TIMESTAMP) h-- and user_pk = 'bf0377d5a3968bac5aac7a10dfff1b86')
+    where h.row_number = 1
+
     ),
+-- Выбираем имеющиеся данные из сателита, но только те которые младше данных которые пришли
+--
      update_records AS (
          SELECT a.user_pk,
                 a.user_hashdiff,
@@ -118,23 +54,28 @@ WITH source_data AS (
                 a.effective_from,
                 a.load_date,
                 a.record_source
+         --FROM ayashin.pj_dds_sat_users_details a
          FROM ayashin.pj_dds_sat_users_details a
                   JOIN source_data as b
                       ON a.user_pk = b.user_pk
-         where a.load_date <= (select max(load_date) from source_data)
-     ),
+         where a.load_date <=  b.load_date--(select max(load_date) from source_data)
+     )-- select * from update_records
+                     ,
+-- Из имеющихся данных сателита, что младше, тех даных что пришли, выберем самую свежую?
      latest_records AS (
          SELECT *
          FROM (SELECT c.user_pk,
                       c.user_hashdiff,
                       c.load_date,
+                      c.effective_from,
                       CASE
                           WHEN (rank() OVER (PARTITION BY c.user_pk ORDER BY c.load_date DESC)) = 1 THEN 'Y'::text
                           ELSE 'N'::text
                           END AS latest
                FROM update_records c) s
          WHERE s.latest = 'Y'::text
-     ),
+     )  --select * from latest_records --where  user_pk ='bf0377d5a3968bac5aac7a10dfff1b86'
+     ,
      records_to_insert AS (
          SELECT distinct
                 e.user_pk,
@@ -145,7 +86,7 @@ WITH source_data AS (
                 e.record_source
          FROM source_data e
                   LEFT JOIN latest_records ON latest_records.user_hashdiff = e.user_hashdiff and latest_records.user_pk =e.user_pk
-         WHERE latest_records.user_hashdiff IS NULL
+         WHERE latest_records.user_hashdiff IS NULL -- and latest_records.user_pk ='bf0377d5a3968bac5aac7a10dfff1b86'
      )
 SELECT * FROM records_to_insert
 """
