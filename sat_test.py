@@ -219,8 +219,4 @@ SELECT * FROM records_to_insert
     """
 )
 
-
-
-all_links_loaded >> [dds_sat_user_details, dds_sat_payment, dds_sat_traffic_user_device]
-all_sats_loaded = DummyOperator(task_id="all_sats_loaded", dag=dag)
 [dds_sat_user_details, dds_sat_payment, dds_sat_traffic_user_device] >> all_sats_loaded
