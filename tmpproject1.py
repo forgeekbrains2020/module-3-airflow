@@ -361,7 +361,7 @@ WITH source_data AS (
            a.load_date,
            a.record_source
     --FROM ayashin.pj_ods_v_payment a where a.load_date =  '2014-01-01 00:00:00.000000 +00:00'
-    FROM ayashin.pj_ods_v_traffic a where extract (year from a.timestamp) =  '{{ execution_date }}'::TIMESTAMP
+    FROM ayashin.pj_ods_v_traffic a where  a.load_date =  '{{ execution_date }}'::TIMESTAMP
 ),
 update_records AS (
          SELECT a.traffic_pk,
