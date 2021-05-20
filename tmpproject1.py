@@ -125,7 +125,7 @@ dds_hub_mdm_legal_type = PostgresOperator(
     """
 )
 
-dds_hub_user_mdm_status = PostgresOperator(
+dds_hub_mdm_user_status = PostgresOperator(
     task_id="dds_hub_mdm_user_status",
     dag=dag,
     # postgres_conn_id="postgres_default",
