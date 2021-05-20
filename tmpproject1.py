@@ -13,7 +13,7 @@ default_args = {
 }
 
 dag = DAG(
-    USERNAME + '_prjall1_source_etl',
+    USERNAME + '_prjall2_source_etl',
     default_args=default_args,
     description='DWH ETL test tasks',
     schedule_interval="@yearly",
