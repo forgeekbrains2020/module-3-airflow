@@ -99,16 +99,17 @@ dds_sat_payment = PostgresOperator(
     sql="""
 INSERT into ayashin.pj_dds_sat_payment (payments_pk, payment_hashdif, pay_date, sum, effective_from, load_date, record_source)
 WITH source_data AS (
-    SELECT a.payments_pk,
+select * from ( SELECT a.payments_pk,
            a.payment_hashdif,
            a.pay_date,
            a.sum,
            a.effective_from,
            a.load_date,
-           a.record_source
-    
-    FROM ayashin.pj_ods_v_payment a where  a.load_date =  '{{ execution_date }}'::TIMESTAMP
-    
+           a.record_source,
+           row_number()
+           OVER (PARTITION BY a.payment_hashdif ORDER BY a.effective_from) AS row_number
+    FROM ayashin.pj_ods_v_payment a where  a.load_date =  '{{ execution_date }}'::TIMESTAMP) h
+    where h.row_number = 1
 ),
 update_records AS (
          SELECT a.payments_pk,
