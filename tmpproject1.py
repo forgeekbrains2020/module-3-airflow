@@ -156,7 +156,7 @@ dds_hub_traffic_device = PostgresOperator(
 all_source_ods_loaded = DummyOperator(task_id="all_source_ods_loaded", dag=dag)
 
 [fill_ods_traffic , fill_ods_mdm , fill_ods_payment]  >> all_source_ods_loaded
-all_source_ods_loaded >> [dds_user_hub, dds_account_hub, dds_payment_hub,dds_billing_period_hub, dds_pay_doc_type_hub, dds_hub_mdm_billing_mode, dds_hub_mdm_district, dds_hub_mdm_legal_type, dds_hub_mdm_user_status, dds_hub_traffi_ip, dds_hub_traffic_device ]
+all_source_ods_loaded >> [dds_user_hub, dds_account_hub, dds_payment_hub,dds_billing_period_hub, dds_pay_doc_type_hub, dds_hub_mdm_billing_mode, dds_hub_mdm_district, dds_hub_mdm_legal_type, dds_hub_mdm_user_status, dds_hub_traffic_ip, dds_hub_traffic_device ]
 #fill_ods_payment  >> [dds_user_hub, dds_account_hub]
 
 all_hubs_loaded = DummyOperator(task_id="all_hubs_loaded", dag=dag)
