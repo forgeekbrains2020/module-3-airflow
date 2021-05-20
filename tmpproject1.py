@@ -99,7 +99,7 @@ dds_pay_doc_type_hub = PostgresOperator(
 )
 
 dds_hub_billing_mode = PostgresOperator(
-    task_id="dds_hub_billing_mode",
+    task_id="dds_hub_mdm_billing_mode",
     dag=dag,
     # postgres_conn_id="postgres_default",
     sql="""
@@ -108,7 +108,7 @@ dds_hub_billing_mode = PostgresOperator(
 )
 
 dds_hub_district = PostgresOperator(
-    task_id="dds_hub_district",
+    task_id="dds_hub_mdm_district",
     dag=dag,
     # postgres_conn_id="postgres_default",
     sql="""
@@ -117,7 +117,7 @@ dds_hub_district = PostgresOperator(
 )
 
 dds_hub_legal_type = PostgresOperator(
-    task_id="dds_hub_legal_type",
+    task_id="dds_hub_mdm_legal_type",
     dag=dag,
     # postgres_conn_id="postgres_default",
     sql="""
@@ -126,7 +126,7 @@ dds_hub_legal_type = PostgresOperator(
 )
 
 dds_hub_user_status = PostgresOperator(
-    task_id="dds_hub_user_status",
+    task_id="dds_hub_mdm_user_status",
     dag=dag,
     # postgres_conn_id="postgres_default",
     sql="""
@@ -135,7 +135,7 @@ dds_hub_user_status = PostgresOperator(
 )
 
 dds_hub_ip = PostgresOperator(
-    task_id="dds_hub_ip",
+    task_id="dds_hub_traffic_ip",
     dag=dag,
     # postgres_conn_id="postgres_default",
     sql="""
@@ -145,7 +145,7 @@ dds_hub_ip = PostgresOperator(
 
 
 dds_hub_device = PostgresOperator(
-    task_id="dds_hub_device",
+    task_id="dds_hub_traffic_device",
     dag=dag,
     # postgres_conn_id="postgres_default",
     sql="""
@@ -156,13 +156,13 @@ dds_hub_device = PostgresOperator(
 all_source_ods_loaded = DummyOperator(task_id="all_source_ods_loaded", dag=dag)
 
 [fill_ods_traffic , fill_ods_mdm , fill_ods_payment]  >> all_source_ods_loaded
-all_source_ods_loaded >> [dds_user_hub, dds_account_hub, dds_payment_hub,dds_billing_period_hub, dds_pay_doc_type_hub, dds_hub_billing_mode, dds_hub_district, dds_hub_legal_type, dds_hub_user_status, dds_hub_ip, dds_hub_device ]
+all_source_ods_loaded >> [dds_user_hub, dds_account_hub, dds_payment_hub,dds_billing_period_hub, dds_pay_doc_type_hub, dds_hub_billing_mode, dds_hub_mdm_district, dds_hub_mdm_legal_type, dds_hub_mdm_user_status, dds_hub_traffi_ip, dds_hub_traffic_device ]
 #fill_ods_payment  >> [dds_user_hub, dds_account_hub]
 
 all_hubs_loaded = DummyOperator(task_id="all_hubs_loaded", dag=dag)
 
 #[dds_user_hub, dds_account_hub] >> all_hubs_loaded
-[dds_user_hub, dds_account_hub, dds_payment_hub, dds_billing_period_hub, dds_pay_doc_type_hub, dds_hub_billing_mode, dds_hub_district, dds_hub_legal_type, dds_hub_user_status, dds_hub_ip, dds_hub_device] >> all_hubs_loaded
+[dds_user_hub, dds_account_hub, dds_payment_hub, dds_billing_period_hub, dds_pay_doc_type_hub, dds_hub_mdm_billing_mode, dds_hub_mdm_district, dds_hub_mdm_legal_type, dds_hub_mdm_user_status, dds_hub_traffic_ip, dds_hub_traffic_device] >> all_hubs_loaded
 
 dds_link_pay_doc_type_payment = PostgresOperator(
     task_id="dds_link_pay_doc_type_payment",
@@ -234,14 +234,21 @@ dds_sat_user_details = PostgresOperator(
     sql="""
 INSERT into ayashin.pj_dds_sat_users_details (user_pk, user_hashdiff, phone, effective_from, load_date, record_source)
 WITH source_data AS (
-    SELECT a.user_pk,
+    select * from( SELECT a.user_pk,
            a.user_hashdiff,
            a.phone,
            a.effective_from,
            a.load_date,
-           a.record_source
-    FROM ayashin.pj_ods_v_payment a where  a.load_date =  '{{ execution_date }}'::TIMESTAMP
+           a.record_source,
+           row_number()
+           OVER (PARTITION BY a.user_hashdiff ORDER BY a.effective_from) AS row_number
+    FROM ayashin.pj_ods_v_payment a where  a.load_date =  '{{ execution_date }}'::TIMESTAMP) h
+    --'2013-01-01 00:00:00.000000 +00:00'::TIMESTAMP) h-- and user_pk = 'bf0377d5a3968bac5aac7a10dfff1b86')
+    where h.row_number = 1
+
     ),
+-- Выбираем имеющиеся данные из сателита, но только те которые младше данных которые пришли
+--
      update_records AS (
          SELECT a.user_pk,
                 a.user_hashdiff,
@@ -249,23 +256,28 @@ WITH source_data AS (
                 a.effective_from,
                 a.load_date,
                 a.record_source
+         --FROM ayashin.pj_dds_sat_users_details a
          FROM ayashin.pj_dds_sat_users_details a
                   JOIN source_data as b
                       ON a.user_pk = b.user_pk
-         where a.load_date <= (select max(load_date) from source_data)
-     ),
+         where a.load_date <=  b.load_date--(select max(load_date) from source_data)
+     )-- select * from update_records
+                     ,
+-- Из имеющихся данных сателита, что младше, тех даных что пришли, выберем самую свежую?
      latest_records AS (
          SELECT *
          FROM (SELECT c.user_pk,
                       c.user_hashdiff,
                       c.load_date,
+                      c.effective_from,
                       CASE
                           WHEN (rank() OVER (PARTITION BY c.user_pk ORDER BY c.load_date DESC)) = 1 THEN 'Y'::text
                           ELSE 'N'::text
                           END AS latest
                FROM update_records c) s
          WHERE s.latest = 'Y'::text
-     ),
+     )  --select * from latest_records --where  user_pk ='bf0377d5a3968bac5aac7a10dfff1b86'
+     ,
      records_to_insert AS (
          SELECT distinct
                 e.user_pk,
@@ -276,7 +288,7 @@ WITH source_data AS (
                 e.record_source
          FROM source_data e
                   LEFT JOIN latest_records ON latest_records.user_hashdiff = e.user_hashdiff and latest_records.user_pk =e.user_pk
-         WHERE latest_records.user_hashdiff IS NULL
+         WHERE latest_records.user_hashdiff IS NULL -- and latest_records.user_pk ='bf0377d5a3968bac5aac7a10dfff1b86'
      )
 SELECT * FROM records_to_insert
 """
@@ -289,16 +301,17 @@ dds_sat_payment = PostgresOperator(
     sql="""
 INSERT into ayashin.pj_dds_sat_payment (payments_pk, payment_hashdif, pay_date, sum, effective_from, load_date, record_source)
 WITH source_data AS (
-    SELECT a.payments_pk,
+select * from ( SELECT a.payments_pk,
            a.payment_hashdif,
            a.pay_date,
            a.sum,
            a.effective_from,
            a.load_date,
-           a.record_source
-    
-    FROM ayashin.pj_ods_v_payment a where  a.load_date =  '{{ execution_date }}'::TIMESTAMP
-    
+           a.record_source,
+           row_number()
+           OVER (PARTITION BY a.payment_hashdif ORDER BY a.effective_from) AS row_number
+    FROM ayashin.pj_ods_v_payment a where  a.load_date =  '{{ execution_date }}'::TIMESTAMP) h
+    where h.row_number = 1
 ),
 update_records AS (
          SELECT a.payments_pk,
