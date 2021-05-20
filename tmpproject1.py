@@ -98,7 +98,7 @@ dds_pay_doc_type_hub = PostgresOperator(
     """
 )
 
-dds_hub_billing_mode = PostgresOperator(
+dds_hub_mdm_billing_mode = PostgresOperator(
     task_id="dds_hub_mdm_billing_mode",
     dag=dag,
     # postgres_conn_id="postgres_default",
@@ -107,7 +107,7 @@ dds_hub_billing_mode = PostgresOperator(
     """
 )
 
-dds_hub_district = PostgresOperator(
+dds_hub_mdm_district = PostgresOperator(
     task_id="dds_hub_mdm_district",
     dag=dag,
     # postgres_conn_id="postgres_default",
@@ -116,7 +116,7 @@ dds_hub_district = PostgresOperator(
     """
 )
 
-dds_hub_legal_type = PostgresOperator(
+dds_hub_mdm_legal_type = PostgresOperator(
     task_id="dds_hub_mdm_legal_type",
     dag=dag,
     # postgres_conn_id="postgres_default",
@@ -125,7 +125,7 @@ dds_hub_legal_type = PostgresOperator(
     """
 )
 
-dds_hub_user_status = PostgresOperator(
+dds_hub_user_mdm_status = PostgresOperator(
     task_id="dds_hub_mdm_user_status",
     dag=dag,
     # postgres_conn_id="postgres_default",
@@ -134,7 +134,7 @@ dds_hub_user_status = PostgresOperator(
     """
 )
 
-dds_hub_ip = PostgresOperator(
+dds_hub_traffic_ip = PostgresOperator(
     task_id="dds_hub_traffic_ip",
     dag=dag,
     # postgres_conn_id="postgres_default",
@@ -144,7 +144,7 @@ dds_hub_ip = PostgresOperator(
 )
 
 
-dds_hub_device = PostgresOperator(
+dds_hub_traffic_device = PostgresOperator(
     task_id="dds_hub_traffic_device",
     dag=dag,
     # postgres_conn_id="postgres_default",
