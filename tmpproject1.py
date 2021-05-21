@@ -13,7 +13,7 @@ default_args = {
 }
 
 dag = DAG(
-    USERNAME + '_prjall2_source_etl',
+    USERNAME + '_prjall3_source_etl',
     default_args=default_args,
     description='DWH ETL test tasks',
     schedule_interval="@yearly",
@@ -134,6 +134,15 @@ dds_hub_mdm_user_status = PostgresOperator(
     """
 )
 
+dds_hub_mdm_user = PostgresOperator(
+    task_id="dds_hub_mdm_user",
+    dag=dag,
+    # postgres_conn_id="postgres_default",
+    sql="""
+        INSERT into ayashin.pj_dds_hub_user(select * from ayashin.pj_view_hub_mdm_user_etl);
+    """
+)
+
 dds_hub_traffic_ip = PostgresOperator(
     task_id="dds_hub_traffic_ip",
     dag=dag,
@@ -153,16 +162,25 @@ dds_hub_traffic_device = PostgresOperator(
     """
 )
 
+dds_hub_traffic_user = PostgresOperator(
+    task_id="dds_hub_traffic_user",
+    dag=dag,
+    # postgres_conn_id="postgres_default",
+    sql="""
+        INSERT into ayashin.pj_dds_hub_user(select * from ayashin.pj_view_hub_traffic_user_etl);
+    """
+)
+
 all_source_ods_loaded = DummyOperator(task_id="all_source_ods_loaded", dag=dag)
 
 [fill_ods_traffic , fill_ods_mdm , fill_ods_payment]  >> all_source_ods_loaded
-all_source_ods_loaded >> [dds_user_hub, dds_account_hub, dds_payment_hub,dds_billing_period_hub, dds_pay_doc_type_hub, dds_hub_mdm_billing_mode, dds_hub_mdm_district, dds_hub_mdm_legal_type, dds_hub_mdm_user_status, dds_hub_traffic_ip, dds_hub_traffic_device ]
+all_source_ods_loaded >> [dds_user_hub, dds_account_hub, dds_payment_hub,dds_billing_period_hub, dds_pay_doc_type_hub, dds_hub_mdm_billing_mode, dds_hub_mdm_district, dds_hub_mdm_legal_type, dds_hub_mdm_user_status, dds_hub_mdm_user, dds_hub_traffic_ip, dds_hub_traffic_device, dds_hub_traffic_user ]
 #fill_ods_payment  >> [dds_user_hub, dds_account_hub]
 
 all_hubs_loaded = DummyOperator(task_id="all_hubs_loaded", dag=dag)
 
 #[dds_user_hub, dds_account_hub] >> all_hubs_loaded
-[dds_user_hub, dds_account_hub, dds_payment_hub, dds_billing_period_hub, dds_pay_doc_type_hub, dds_hub_mdm_billing_mode, dds_hub_mdm_district, dds_hub_mdm_legal_type, dds_hub_mdm_user_status, dds_hub_traffic_ip, dds_hub_traffic_device] >> all_hubs_loaded
+[dds_user_hub, dds_account_hub, dds_payment_hub, dds_billing_period_hub, dds_pay_doc_type_hub, dds_hub_mdm_billing_mode, dds_hub_mdm_district, dds_hub_mdm_legal_type, dds_hub_mdm_user_status, dds_hub_mdm_user, dds_hub_traffic_ip, dds_hub_traffic_device, dds_hub_traffic_user] >> all_hubs_loaded
 
 dds_link_pay_doc_type_payment = PostgresOperator(
     task_id="dds_link_pay_doc_type_payment",
