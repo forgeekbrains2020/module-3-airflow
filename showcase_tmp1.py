@@ -57,3 +57,27 @@ where prdby.district_key  is null and  prt.billing_year ={{ execution_date.year 
     """
 )
 
+fill_dim_billing_mode = PostgresOperator(
+    task_id="fill_dim_billing_mode",
+    dag=dag,
+    # postgres_conn_id="postgres_default",
+    sql="""
+        insert into  ayashin.pj_dm_dim_billing_mode(billing_mode_key)
+select distinct billing_mode  from ayashin.pj_view_showcase prt
+    left join ayashin.pj_dm_dim_billing_mode prdby on prdby.billing_mode_key = prt.billing_mode
+where prdby.billing_mode_key  is null and  prt.billing_year ={{ execution_date.year }};
+    """
+)
+
+fill_dim_registration_year = PostgresOperator(
+    task_id="fill_dim_registration_year",
+    dag=dag,
+    # postgres_conn_id="postgres_default",
+    sql="""
+        insert into  ayashin.pj_dm_dim_registration_year(registration_year_key)
+select distinct registration_year  from ayashin.pj_view_showcase prt
+    left join ayashin.pj_dm_dim_registration_year prdby on prdby.registration_year_key = prt.registration_year
+where prdby.registration_year_key  is null and  prt.billing_year ={{ execution_date.year }};
+    """
+)
+
