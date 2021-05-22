@@ -38,9 +38,22 @@ fill_dim_legal_type = PostgresOperator(
     # postgres_conn_id="postgres_default",
     sql="""
         insert into  ayashin.pj_dm_dim_legal_type(legal_type_key)
-select distinct legal_type as legal_type_key from ayashin.pj_view_showcase
+select distinct legal_type as legal_type_key from ayashin.pj_view_showcase prt
     left join  ayashin.pj_dm_dim_legal_type on legal_type = legal_type_key
-where legal_type_key is null;;
+where legal_type_key is null and  prt.billing_year ={{ execution_date.year }};
+    """
+)
+
+
+fill_dim_dim_district = PostgresOperator(
+    task_id="fill_dim_dim_district",
+    dag=dag,
+    # postgres_conn_id="postgres_default",
+    sql="""
+        insert into  ayashin.pj_dm_dim_district(district_key)
+select distinct district  from ayashin.pj_view_showcase prt
+    left join ayashin.pj_dm_dim_district prdby on prdby.district_key = prt.district
+where prdby.district_key  is null and  prt.billing_year ={{ execution_date.year }};
     """
 )
 
