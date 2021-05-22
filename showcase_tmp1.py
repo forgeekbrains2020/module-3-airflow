@@ -51,7 +51,7 @@ fill_dim_dim_district = PostgresOperator(
     # postgres_conn_id="postgres_default",
     sql="""
         insert into  ayashin.pj_dm_dim_district(district_key)
-select distinct as district_key  from ayashin.pj_view_showcase prt
+select distinct district as district_key  from ayashin.pj_view_showcase prt
     left join ayashin.pj_dm_dim_district prdby on prdby.district_key = prt.district
 where prdby.district_key  is null and  prt.billing_year ={{ execution_date.year }};
     """
