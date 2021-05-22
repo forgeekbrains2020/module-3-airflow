@@ -102,6 +102,6 @@ where billing_year_key ={{ execution_date.year }};
     """
 )
 
-all_dim_loaded >> 
+all_dim_loaded >> fill_dim_fct
 
 
