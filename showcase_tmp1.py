@@ -33,7 +33,7 @@ where prdby.billing_year_key  is null and  prt.billing_year ={{ execution_date.y
 )
 
 fill_dim_legal_type = PostgresOperator(
-    task_id="dim_legal_type",
+    task_id="fill_dim_legal_type",
     dag=dag,
     # postgres_conn_id="postgres_default",
     sql="""
