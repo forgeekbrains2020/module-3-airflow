@@ -81,3 +81,6 @@ where prdby.registration_year_key  is null and  prt.billing_year ={{ execution_d
     """
 )
 
+all_dim_loaded = DummyOperator(task_id="all_dim_loaded", dag=dag)
+
+[fill_dim_billing_year , fill_dim_legal_type , fill_dim_dim_district, fill_dim_billing_mode, fill_dim_billing_mode, fill_dim_registration_year ]  >> all_dim_loaded
