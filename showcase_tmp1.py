@@ -84,3 +84,24 @@ where prdby.registration_year_key  is null and  prt.billing_year ={{ execution_d
 all_dim_loaded = DummyOperator(task_id="all_dim_loaded", dag=dag)
 
 [fill_dim_billing_year , fill_dim_legal_type , fill_dim_dim_district, fill_dim_billing_mode, fill_dim_billing_mode, fill_dim_registration_year ]  >> all_dim_loaded
+
+fill_dim_fct = PostgresOperator(
+    task_id="fill_dim_fct",
+    dag=dag,
+    # postgres_conn_id="postgres_default",
+    sql="""
+    insert into ayashin.tmp_pj_dm_dim_fct (billing_year_id, legal_type_id, district_id, billing_mode_id, registration_year_id, is_vip, payment_sum, traffic_amount)
+        select biy.id, lt.id, d.id, bim.id, ry.id, is_vip, raw.payment_sum, raw.traffic_amount
+from ayashin.pj_view_showcase raw
+join ayashin.pj_dm_dim_billing_year biy on raw.billing_year = biy.billing_year_key
+join ayashin.pj_dm_dim_billing_mode bim on raw.billing_mode = bim.billing_mode_key
+join ayashin.pj_dm_dim_legal_type lt on raw.legal_type = lt.legal_type_key
+join ayashin.pj_dm_dim_district d on raw.district = d.district_key
+join ayashin.pj_dm_dim_registration_year ry on raw.registration_year = ry.registration_year_key
+where billing_year_key ={{ execution_date.year }};
+    """
+)
+
+all_dim_loaded >> 
+
+
