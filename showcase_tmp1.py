@@ -32,3 +32,15 @@ where prdby.billing_year_key  is null and  prt.billing_year ={{ execution_date.y
     """
 )
 
+fill_dim_legal_type = PostgresOperator(
+    task_id="dim_legal_type",
+    dag=dag,
+    # postgres_conn_id="postgres_default",
+    sql="""
+        insert into  ayashin.pj_dm_dim_legal_type(legal_type_key)
+select distinct legal_type as legal_type_key from ayashin.pj_view_showcase
+    left join  ayashin.pj_dm_dim_legal_type on legal_type = legal_type_key
+where legal_type_key is null;;
+    """
+)
+
