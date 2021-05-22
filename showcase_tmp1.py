@@ -26,7 +26,7 @@ fill_dim_billing_year = PostgresOperator(
     # postgres_conn_id="postgres_default",
     sql="""
         insert into  ayashin.pj_dm_dim_billing_year(billing_year_key)
-select distinct billing_year  from ayashin.pj_view_showcase prt
+select distinct billing_year as billing_year_key  from ayashin.pj_view_showcase prt
     left join ayashin.pj_dm_dim_billing_year prdby on prdby.billing_year_key = prt.billing_year
 where prdby.billing_year_key  is null and  prt.billing_year ={{ execution_date.year }};
     """
