@@ -13,7 +13,7 @@ default_args = {
 }
 
 dag = DAG(
-    USERNAME + 'project_showcase_etl',
+    USERNAME + '_project_showcase_etl',
     default_args=default_args,
     description='DWH ETL test tasks',
     schedule_interval="@yearly",
