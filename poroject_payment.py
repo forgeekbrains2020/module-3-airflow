@@ -81,7 +81,7 @@ dds_pay_doc_type_hub = PostgresOperator(
 
 #source_ods_loaded = DummyOperator(task_id="all_source_ods_loaded", dag=dag)
 
- fill_ods_payment  >> [dds_user_hub, dds_account_hub, dds_payment_hub,dds_billing_period_hub, dds_pay_doc_type_hub]
+fill_ods_payment  >> [dds_user_hub, dds_account_hub, dds_payment_hub,dds_billing_period_hub, dds_pay_doc_type_hub]
 #fill_ods_payment  >> [dds_user_hub, dds_account_hub]
 
 all_hubs_loaded = DummyOperator(task_id="all_hubs_loaded", dag=dag)
