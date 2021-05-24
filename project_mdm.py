@@ -113,4 +113,4 @@ all_links_loaded = DummyOperator(task_id="all_links_loaded", dag=dag)
 
 
 
-all_links_loaded >> [dds_sat_user_details, dds_sat_payment, dds_sat_traffic_user_device]
+
